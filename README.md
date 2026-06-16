@@ -250,6 +250,75 @@ mod_sel -->| Selection Logic|
 * Output samples are unsigned 8-bit values ranging from 0 to 255.
 
 ---
+## Waveform Analysis
+
+The simulation waveform verifies the correct operation of the digital modulator for the selected modulation schemes. The carrier signals are generated using a 16-sample sine-wave lookup table whose values are obtained from:
+
+[
+\text{Sample}(n) = 128 + \text{round}\left(128 \times \sin\left(\frac{2\pi n}{16}\right)\right)
+]
+
+This produces the carrier samples:
+
+```text
+128, 176, 218, 246, 255, 246, 218, 176,
+128, 79, 37, 9, 0, 9, 37, 79
+```
+
+or, in hexadecimal:
+
+```text
+80, B0, DA, F6, FF, F6, DA, B0,
+80, 4F, 25, 09, 00, 09, 25, 4F
+```
+
+These values represent one complete cycle of an 8-bit unsigned sinusoidal waveform centered at 128.
+
+### BPSK Operation (`mod_sel = 01`)
+
+When `mod_sel` is set to `01`, the module operates in Binary Phase Shift Keying (BPSK) mode using:
+
+```verilog
+mod_out = data_in ? carrier_fc : ~carrier_fc;
+```
+
+For `data_in = 1`, the output follows the original carrier waveform:
+
+```text
+80, B0, DA, F6, FF, F6, DA, B0, ...
+```
+
+For `data_in = 0`, the output becomes the bitwise complement of the carrier:
+
+```text
+7F, 4F, 25, 09, 00, 09, 25, 4F, ...
+```
+
+The complemented waveform represents a 180° phase reversal of the carrier, which is the fundamental principle of BPSK modulation. This behavior can be observed in the simulation where the output transitions from the normal carrier sequence to its inverted counterpart whenever `data_in` changes state.
+
+### FSK Operation (`mod_sel = 10`)
+
+When `mod_sel` changes to `10`, the module operates in Frequency Shift Keying (FSK) mode:
+
+```verilog
+mod_out = data_in ? carrier_2fc : carrier_fc;
+```
+
+In this mode:
+
+* `data_in = 0` selects the carrier at frequency `fc`
+* `data_in = 1` selects the carrier at frequency `2fc`
+
+As a result, the output waveform switches between two different frequencies depending on the input data bit. The higher-frequency carrier completes twice as many oscillations within the same sample period, producing the faster-changing waveform visible in the simulation.
+
+### Observations
+
+* The phase counter increments on every rising edge of the clock, causing the carrier samples to advance through the lookup table.
+* The output values shown in the waveform viewer correspond directly to the hexadecimal representation of the lookup-table samples.
+* Changes in `data_in` immediately affect the selected modulation output because the modulation logic is implemented using a combinational `always @(*)` block.
+* The waveform confirms correct implementation of both BPSK phase inversion and FSK frequency switching.
+
+The simulation results match the expected theoretical behavior of ASK, BPSK, and FSK digital modulation techniques, demonstrating the correct functionality of the Verilog design.
 
 ## Example Applications
 
