@@ -1,0 +1,39 @@
+module digital_modulator_tb;
+reg clk,rst,data_in;
+reg [1:0] mod_sel;
+wire [7:0] mod_out;
+
+digital_modulator uut(
+    .clk(clk),
+    .rst(rst),
+    .mod_out(mod_out),
+    .mod_sel(mod_sel),
+    .data_in(data_in)
+);
+
+always #5 clk = ~clk;
+
+initial begin
+    $dumpfile("digi.vcd"); $dumpvars(0,digital_modulator_tb);
+    clk = 0;
+    rst = 1;
+    mod_sel = 2'b00;
+    data_in = 0;
+
+    #20;rst = 0;
+
+    mod_sel = 2'b00;
+    data_in = 1;#50;
+    data_in = 0;#50;
+
+    mod_sel = 2'b01;
+    data_in = 1;#50;
+    data_in = 0;#50;
+
+    mod_sel = 2'b10;
+    data_in = 1;#50;
+    data_in = 0;#50;
+
+    $finish; 
+end
+endmodule
