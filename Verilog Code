@@ -1,0 +1,49 @@
+module digital_modulator(
+    input wire clk,
+    input wire rst,
+    input wire [1:0] mod_sel,
+    input wire data_in,
+    output reg [7:0] mod_out
+);
+
+reg [7:0] carrier_fc;
+reg [7:0] carrier_2fc;
+reg [3:0] phase;
+
+always @(posedge clk or posedge rst) begin
+    if(rst) begin
+        phase<=0;
+        carrier_fc <= 128;
+        carrier_2fc <= 128;
+    end else begin
+        phase <= phase + 1;
+    
+            case(phase)
+                4'd0 : begin carrier_fc <= 128; carrier_2fc <= 128; end
+                4'd1:  begin carrier_fc <= 176; carrier_2fc <= 218; end
+                4'd2:  begin carrier_fc <= 218; carrier_2fc <= 255; end
+                4'd3:  begin carrier_fc <= 246; carrier_2fc <= 218; end
+                4'd4:  begin carrier_fc <= 255; carrier_2fc <= 128; end
+                4'd5:  begin carrier_fc <= 246; carrier_2fc <= 37;  end
+                4'd6:  begin carrier_fc <= 218; carrier_2fc <= 0;   end
+                4'd7:  begin carrier_fc <= 176; carrier_2fc <= 37;  end
+                4'd8:  begin carrier_fc <= 128; carrier_2fc <= 128; end
+                4'd9:  begin carrier_fc <= 79;  carrier_2fc <= 218; end
+                4'd10: begin carrier_fc <= 37;  carrier_2fc <= 255; end
+                4'd11: begin carrier_fc <= 9;   carrier_2fc <= 218; end
+                4'd12: begin carrier_fc <= 0;   carrier_2fc <= 128; end
+                4'd13: begin carrier_fc <= 9;   carrier_2fc <= 37;  end
+                4'd14: begin carrier_fc <= 37;  carrier_2fc <= 0;   end
+                4'd15: begin carrier_fc <= 79;  carrier_2fc <= 37;  end
+            endcase
+end
+end
+
+always @(*) begin
+    case(mod_sel)
+        2'b00: mod_out = data_in ? carrier_fc:8'd128;
+        2'b01: mod_out = data_in ? carrier_fc:~carrier_fc;
+        2'b10: mod_out = data_in ? carrier_2fc: carrier_fc;
+    endcase
+end
+endmodule   
